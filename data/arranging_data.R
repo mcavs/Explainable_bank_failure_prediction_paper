@@ -1,5 +1,5 @@
-load("~/Documents/UYIK2024_Counterfactual_Explanations_of_Bank_Failure_Prediction_Models/activeData.Rda")
-load("~/Documents/UYIK2024_Counterfactual_Explanations_of_Bank_Failure_Prediction_Models/failureData.Rda")
+load("~/Documents/Explainable_bank_failure_prediction_paper/activeData.Rda")
+load("~/Documents/Explainable_bank_failure_prediction_paper/failureData.Rda")
 
 
 # adding labels to active and failure dataset
