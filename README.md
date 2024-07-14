@@ -7,7 +7,6 @@ This repository contains code and resources related to the implementation of cou
 1. [Overview](#overview)
 2. [Contents](#contents)
 3. [Getting Started](#getting-started)
-4. [References](#references)
 
 ## Overview <a name="overview"></a>
 
@@ -28,6 +27,3 @@ Counterfactual explanations play a vital role by identifying the minimal changes
 3. Complete data manipulation operations by pulling metrics from the [arranged data](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/blob/main/data/arranging_data.R) script.
 4. Splitting data into two subsets in [model partition](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/blob/main/model/model_partition.R) script.
 5. Each model is included in 3 separate methods for the original dataset, 3 resampling and weighting methods. You can get all the counterfactuals in [Original](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/tree/main/counterfactuals_for_all_models/original), [Oversampling](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/tree/main/counterfactuals_for_all_models/oversampling), [Undersampling](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/tree/main/counterfactuals_for_all_models/undersampling), [SMOTE](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/tree/main/counterfactuals_for_all_models/smote) and [Cost-Sensitive](https://github.com/mcavs/Explainable_bank_failure_prediction_paper/tree/main/counterfactuals_for_all_models/cost_sensitive) scripts.
-
-## References  <a name="references"></a>
-
