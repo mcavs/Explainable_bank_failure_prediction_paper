@@ -1,9 +1,9 @@
 # Getting all banks with getInstitutionAll()
 # bank_infos <- getInstitutionsAll() 
-bank_infos <- read_csv("~/Documents/UYIK2024_Counterfactual_Explanations_of_Bank_Failure_Prediction_Models/institutions.csv")
+bank_infos <- read_csv("~/Documents/Explainable_bank_failure_prediction_paper/institutions.csv")
 bank_infos <- bank_infos %>% filter(ACTIVE == 1)
 
-failure_banklist <- read.csv("~/Documents/UYIK2024_Counterfactual_Explanations_of_Bank_Failure_Prediction_Models/banklist.csv", header=FALSE, row.names=NULL)
+failure_banklist <- read.csv("~/Documents/Explainable_bank_failure_prediction_paper/banklist.csv", header=FALSE, row.names=NULL)
 names(failure_banklist) <- c("Bank Name","City","State","Cert","Acquiring Institution","Closing Date","Fund")
 failure_banklist <- failure_banklist[-1,] 
 
