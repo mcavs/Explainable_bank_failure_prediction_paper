@@ -96,14 +96,48 @@ df_forecast_ext2 <- df_forecast_ext2[-c(2,3)]
 df_forecast_ext2$Prediction_ext <- as.factor(df_forecast_ext2$Prediction_ext)
 
 
+### XGBoost Model ###
+set.seed(123)
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+model_weights2_xgb <- train(
+  Label ~ .,
+  data = train_data2,
+  method = "xgbTree",
+  trControl = ctrl,
+  tuneLength = 3,
+  verbose = FALSE,
+  weights = ifelse(train_data2$Label == 1, 5, 1)
+)
+
+forecast_xgb2 <- predict(model_weights2_xgb, modelData_for_prediction, type = "prob")
+
+
+df_forecast_xgb2 <- data.frame(IDRSSD = IDRSSD_Prediction, Prob_xgb = forecast_xgb2) 
+
+df_forecast_xgb2 <- df_forecast_xgb2 %>%
+  mutate(Prediction_xgb = ifelse(Prob_xgb.0 > Prob_xgb.1, 0, 1)) %>%
+  mutate(Prob_xgb = ifelse(Prediction_xgb == 0, Prob_xgb.0, Prob_xgb.1))
+
+df_forecast_xgb2 <- df_forecast_xgb2[-c(2,3)]
+
+df_forecast_xgb2$Prediction_xgb <- as.factor(df_forecast_xgb2$Prediction_xgb)
+
+
 # merging models
 merge_dt_rf2 <- merge(df_forecast_dt2,df_forecast_rf2,by="IDRSSD")
 merge_dt_rf_ext2 <- merge(merge_dt_rf2,df_forecast_ext2,by="IDRSSD")
+merge_dt_rf_ext_xgb2 <- merge(merge_dt_rf_ext2,df_forecast_xgb2,by="IDRSSD")
 
 
-df_results2 <- merge_dt_rf_ext2 %>%
-  mutate(OverAllProb = round((Prob_dt+Prob_rf+Prob_ext)/3,3)) %>%
-  mutate(Prob_dt=round(Prob_dt,3),Prob_rf=round(Prob_rf,3),Prob_ext=round(Prob_ext,3))%>%
+df_results2 <- merge_dt_rf_ext_xgb2 %>%
+  mutate(OverAllProb = round((Prob_dt+Prob_rf+Prob_ext+Prob_xgb)/4,3)) %>%
+  mutate(Prob_dt=round(Prob_dt,3),Prob_rf=round(Prob_rf,3),Prob_ext=round(Prob_ext,3),Prob_xgb=round(Prob_xgb,3))%>%
   mutate(OverAllPrediction = as.numeric(Prediction_dt)+as.numeric(Prediction_rf)+
-           as.numeric(Prediction_ext)-3)
+           as.numeric(Prediction_ext)+as.numeric(Prediction_xgb)-4)
 df_results2
