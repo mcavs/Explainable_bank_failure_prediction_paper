@@ -9,11 +9,13 @@ org_test_results$Sample_ID <- 1:nrow(org_test_results)
 org_test_results <- org_test_results[,-5]
 
 org_test_results <- org_test_results %>%
+  rename(Diversity = diversity,
+         Minimality = minimality) %>% 
   mutate(Validity = dist_target,
          Proximity = dist_x_interest,
          Sparsity = no_changed,
          Plausibility = dist_train) %>%
-  pivot_longer(cols = c(Validity, Proximity, Sparsity, Plausibility, minimality), 
+  pivot_longer(cols = c(Validity, Proximity, Sparsity, Plausibility, Minimality, Diversity), 
                names_to = "Quality_Metric", 
                values_to ="Values")
 
@@ -25,12 +27,12 @@ write.csv(org_test_results, "counterfactuals_for_all_models/original/org_combine
 
 org_summary_metrics <- org_test_results %>%
   filter(CE_Method %in% c("WhatIf", "MOC", "NICE"), 
-         Used_Model %in% c("Decision tree", "Extra trees", "Random forest"), 
-         Quality_Metric %in% c("Proximity", "Sparsity", "Plausibility", "Minimality", "Validity")) %>%
+         Used_Model %in% c("Decision tree", "Extra trees", "Random forest", "XGBoost"), 
+         Quality_Metric %in% c("Proximity", "Sparsity", "Plausibility", "Minimality", "Validity", "Diversity")) %>%
   group_by(CE_Method, Used_Model, Quality_Metric) %>%
   summarise(
-    Mean_Values = mean(Values),
-    StdDev_Values = sd(Values)
+    Mean_Values = mean(Values, na.rm = TRUE),
+    StdDev_Values = sd(Values, na.rm = TRUE)
   )
 
 write.csv(org_summary_metrics, "counterfactuals_for_all_models/original/org_summary_metrics.csv", row.names = FALSE)
@@ -46,8 +48,6 @@ ggplot(org_summary_metrics, aes(x = CE_Method, y = Mean_Values, color = Used_Mod
   theme_minimal()  +
   theme(legend.position = "bottom") +
   theme(legend.title=element_blank())
-
-
 
 
 

@@ -11,7 +11,10 @@ for (i in 1:nrow(filtered_org_dt)) {
   print(org_predictor_dt$predict(x_interest))
   wi_classif <- WhatIfClassif$new(org_predictor_dt, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
-  org_counterfactuals_dt[[i]] <- cfactuals$evaluate()
+  org_counterfactuals_dt[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   cfactuals$predict()
 }
 
@@ -30,7 +33,10 @@ for (i in 1:nrow(filtered_org_ext)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(org_predictor_ext, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  org_counterfactuals_ext[[i]] <- cfactuals$evaluate()
+  org_counterfactuals_ext[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
@@ -48,9 +54,35 @@ for (i in 1:nrow(filtered_org_rf)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(org_predictor_rf, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  org_counterfactuals_rf[[i]] <- cfactuals$evaluate()
+  org_counterfactuals_rf[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
 org_all_cfactuals_rf <- do.call(rbind, org_counterfactuals_rf)
 save(org_all_cfactuals_rf, file = "counterfactuals_for_all_models/original/CEs/org_all_cfactuals_rf.rda")
+
+
+
+### XGBoost ###
+
+org_predictor_xgb <- Predictor$new(model_org_xgb2)
+org_counterfactuals_xgb <- list()
+
+for (i in 1:nrow(filtered_org_xgb)) {
+  x_interest <- filtered_org_xgb[i,]
+  prediction <- org_predictor_xgb$predict(x_interest)
+  print(prediction)
+  wi_classif <- WhatIfClassif$new(org_predictor_xgb, n_counterfactuals = 10L)
+  cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  org_counterfactuals_xgb[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
+  print(cfactuals$predict())
+}
+
+org_all_cfactuals_xgb <- do.call(rbind, org_counterfactuals_xgb)
+save(org_all_cfactuals_xgb, file = "counterfactuals_for_all_models/original/CEs/org_all_cfactuals_xgb.rda")

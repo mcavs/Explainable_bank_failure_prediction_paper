@@ -14,11 +14,14 @@ for (i in 1:nrow(filtered_org_dt)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
-  org_nice_ce_dt[[i]] <- nice_cfactuals$evaluate()
+  org_nice_ce_dt[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -39,11 +42,14 @@ for (i in 1:nrow(filtered_org_ext)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  org_nice_ce_ext[[i]] <- nice_cfactuals$evaluate()
+  org_nice_ce_ext[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -64,11 +70,14 @@ for (i in 1:nrow(filtered_org_rf)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  org_nice_ce_rf[[i]] <- nice_cfactuals$evaluate()
+  org_nice_ce_rf[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -76,3 +85,33 @@ for (i in 1:nrow(filtered_org_rf)) {
 org_nice_cfactuals_rf <- do.call(rbind, org_nice_ce_rf)
 save(org_nice_cfactuals_rf, file = "counterfactuals_for_all_models/original/CEs/org_nice_cfactuals_rf.rda")
 
+
+### XGBoost ###
+
+# Creating a 'predictor' object, which serves as a wrapper for different model types.
+org_predictor_xgb <- Predictor$new(model_org_xgb2)
+org_nice_ce_xgb <- list()
+
+for (i in 1:nrow(filtered_org_xgb)) {
+  x_interest <- filtered_org_xgb[i,]
+  print(org_predictor_xgb$predict(x_interest))
+  nice_classif <- NICEClassif$new(
+    org_predictor_xgb,
+    optimization = "sparsity", # sparsity (default), proximity or plausibility.
+    x_nn_correct = FALSE,
+    return_multiple = TRUE,
+    finish_early = FALSE,
+    distance_function = "gower")
+  
+  nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  org_nice_ce_xgb[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
+  print(nice_cfactuals$predict())
+  
+}
+
+#org_nice_cfactuals_xgb <- do.call(rbind, org_nice_ce_xgb)
+org_nice_cfactuals_xgb <- rbindlist(org_nice_ce_xgb, fill = TRUE)
+save(org_nice_cfactuals_xgb, file = "counterfactuals_for_all_models/original/CEs/org_nice_cfactuals_xgb.rda")
