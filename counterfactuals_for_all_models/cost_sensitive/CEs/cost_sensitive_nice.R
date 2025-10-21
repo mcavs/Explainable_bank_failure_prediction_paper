@@ -14,18 +14,21 @@ for (i in 1:nrow(filtered_dt)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
   
-  nice_ce_dt[[i]] <- nice_cfactuals$evaluate()
+  nice_ce_dt[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
 
 nice_cfactuals_dt <- do.call(rbind, nice_ce_dt)
-save(nice_cfactuals_dt, file = "counterfactuals_for_all_models/weighting/CEs/nice_cfactuals_dt.rda")
+save(nice_cfactuals_dt, file = "counterfactuals_for_all_models/cost_sensitive/CEs/nice_cfactuals_dt.rda")
 
 ### Extratrees ###
 
@@ -40,18 +43,21 @@ for (i in 1:nrow(filtered_ext)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  nice_ce_ext[[i]] <- nice_cfactuals$evaluate()
+  nice_ce_ext[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
 
 nice_cfactuals_ext <- do.call(rbind, nice_ce_ext)
-save(nice_cfactuals_ext, file = "counterfactuals_for_all_models/weighting/CEs/nice_cfactuals_ext.rda")
+save(nice_cfactuals_ext, file = "counterfactuals_for_all_models/cost_sensitive/CEs/nice_cfactuals_ext.rda")
 
 ### Randomforest ###
 
@@ -66,16 +72,49 @@ for (i in 1:nrow(filtered_rf)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  nice_ce_rf[[i]] <- nice_cfactuals$evaluate()
+  nice_ce_rf[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
 
 nice_cfactuals_rf <- do.call(rbind, nice_ce_rf)
-save(nice_cfactuals_rf, file = "counterfactuals_for_all_models/weighting/CEs/nice_cfactuals_rf.rda")
+save(nice_cfactuals_rf, file = "counterfactuals_for_all_models/cost_sensitive/CEs/nice_cfactuals_rf.rda")
 
+
+### XGBoost ###
+
+# Creating a 'predictor' object, which serves as a wrapper for different model types.
+predictor_xgb <- Predictor$new(model_weights2_xgb)
+nice_ce_rf <- list()
+
+for (i in 1:nrow(filtered_xgb)) {
+  x_interest <- filtered_xgb[i,]
+  print(predictor_xgb$predict(x_interest))
+  nice_classif <- NICEClassif$new(
+    predictor_xgb,
+    optimization = "sparsity", # sparsity (default), proximity or plausibility.
+    x_nn_correct = FALSE,
+    return_multiple = TRUE,
+    finish_early = FALSE,
+    distance_function = "gower")
+  
+  nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  nice_ce_rf[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
+  print(nice_cfactuals$predict())
+  
+}
+
+#org_nice_cfactuals_xgb <- do.call(rbind, org_nice_ce_xgb)
+nice_cfactuals_xgb <- rbindlist(nice_ce_rf, fill = TRUE)
+save(nice_cfactuals_xgb, file = "counterfactuals_for_all_models/cost_sensitive/CEs/nice_cfactuals_xgb.rda")

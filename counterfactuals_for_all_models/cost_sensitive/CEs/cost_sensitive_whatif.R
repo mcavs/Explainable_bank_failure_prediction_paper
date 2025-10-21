@@ -4,8 +4,6 @@
 
 # Creating a 'predictor' object, which serves as a wrapper for different model types.
 predictor_dt <- Predictor$new(model_dt_weights2)
-
-
 counterfactuals_dt <- list()
 
 for (i in 1:nrow(filtered_dt)) {
@@ -13,12 +11,15 @@ for (i in 1:nrow(filtered_dt)) {
   print(predictor_dt$predict(x_interest))
   wi_classif <- WhatIfClassif$new(predictor_dt, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
-  counterfactuals_dt[[i]] <- cfactuals$evaluate()
+  counterfactuals_dt[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   cfactuals$predict()
 }
 
 all_cfactuals_dt <- do.call(rbind, counterfactuals_dt)
-save(all_cfactuals_dt, file = "counterfactuals_for_all_models/weighting/CEs/all_cfactuals_dt.rda")
+save(all_cfactuals_dt, file = "counterfactuals_for_all_models/cost_sensitive/CEs/all_cfactuals_dt.rda")
 
 ### Extratrees ###
 
@@ -34,12 +35,15 @@ for (i in 1:nrow(filtered_ext)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(predictor_ext, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  counterfactuals_ext[[i]] <- cfactuals$evaluate()
+  counterfactuals_ext[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
 all_cfactuals_ext <- do.call(rbind, counterfactuals_ext)
-save(all_cfactuals_ext, file = "counterfactuals_for_all_models/weighting/CEs/all_cfactuals_ext.rda")
+save(all_cfactuals_ext, file = "counterfactuals_for_all_models/cost_sensitive/CEs/all_cfactuals_ext.rda")
 
 
 ### Randomforest ###
@@ -54,9 +58,35 @@ for (i in 1:nrow(filtered_rf)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(predictor_rf, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  counterfactuals_rf[[i]] <- cfactuals$evaluate()
+  counterfactuals_rf[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
 all_cfactuals_rf <- do.call(rbind, counterfactuals_rf)
-save(all_cfactuals_rf, file = "counterfactuals_for_all_models/weighting/CEs/all_cfactuals_rf.rda")
+save(all_cfactuals_rf, file = "counterfactuals_for_all_models/cost_sensitive/CEs/all_cfactuals_rf.rda")
+
+
+### XGBoost ###
+
+predictor_xgb <- Predictor$new(model_weights2_xgb)
+counterfactuals_xgb <- list()
+
+for (i in 1:nrow(filtered_xgb)) {
+  x_interest <- filtered_xgb[i,]
+  prediction <- predictor_xgb$predict(x_interest)
+  print(prediction)
+  wi_classif <- WhatIfClassif$new(predictor_xgb, n_counterfactuals = 10L)
+  cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  counterfactuals_xgb[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
+  print(cfactuals$predict())
+}
+
+all_cfactuals_xgb <- do.call(rbind, counterfactuals_xgb)
+save(all_cfactuals_xgb, file = "counterfactuals_for_all_models/cost_sensitive/CEs/all_cfactuals_xgb.rda")
+

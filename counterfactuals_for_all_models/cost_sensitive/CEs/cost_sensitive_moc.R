@@ -35,7 +35,10 @@ for (i in 1:nrow(filtered_dt)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
   
-  moc_ce_dt[[i]] <- moc_cfactuals$evaluate()
+  moc_ce_dt[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
   moc_cfactuals$predict()
 
 }
@@ -77,11 +80,15 @@ for (i in 1:nrow(filtered_ext)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  moc_ce_ext[[i]] <- moc_cfactuals$evaluate()
-  print(moc_cfactuals$predict())
+  moc_ce_ext[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
+  moc_cfactuals$predict()
 }
 
-moc_cfactuals_ext <- do.call(rbind, moc_ce_ext)
+#moc_cfactuals_ext <- do.call(rbind, moc_ce_ext)
+moc_cfactuals_ext <- rbindlist(moc_ce_ext, fill = TRUE)
 save(moc_cfactuals_ext, file = "counterfactuals_for_all_models/cost_sensitive/CEs/moc_cfactuals_ext.rda")
 
 
@@ -119,9 +126,60 @@ for (i in 1:nrow(filtered_rf)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  moc_ce_rf[[i]] <- moc_cfactuals$evaluate()
-  print(moc_cfactuals$predict())
+  moc_ce_rf[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
+  moc_cfactuals$predict()
 }
 
-moc_cfactuals_rf <- do.call(rbind, moc_ce_rf)
+#moc_cfactuals_rf <- do.call(rbind, moc_ce_rf)
+moc_cfactuals_rf <- rbindlist(moc_ce_rf, fill = TRUE)
 save(moc_cfactuals_rf, file = "counterfactuals_for_all_models/cost_sensitive/CEs/moc_cfactuals_rf.rda")
+
+
+
+### XGBoost ###
+
+# Creating a 'predictor' object, which serves as a wrapper for different model types.
+predictor_xgb <- Predictor$new(model_weights2_xgb)
+filtered_xgb <- filtered_xgb %>% filter(NIMY >= -0.794654)
+moc_ce_xgb <- list()
+
+for (i in 1:nrow(filtered_xgb)) {
+  x_interest <- filtered_xgb[i,]
+  print(predictor_xgb$predict(x_interest))
+  moc_classif <- MOCClassif$new(
+    predictor_xgb,
+    epsilon = NULL,
+    fixed_features = NULL,
+    max_changed = NULL,
+    mu = 20L,
+    termination_crit = "gens",
+    n_generations = 10L,
+    p_rec = 0.71,
+    p_rec_gen = 0.62,
+    p_mut = 0.73,
+    p_mut_gen = 0.5,
+    p_mut_use_orig = 0.4,
+    k = 1L,
+    weights = NULL,
+    lower = NULL,
+    upper = NULL,
+    init_strategy = "icecurve",
+    use_conditional_mutator = FALSE,
+    quiet = FALSE,
+    distance_function = "gower"
+  )
+  
+  moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  moc_ce_xgb[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
+  moc_cfactuals$predict()
+  
+}
+
+moc_cfactuals_xgb <- do.call(rbind, moc_ce_xgb)
+save(moc_cfactuals_xgb, file = "counterfactuals_for_all_models/cost_sensitive/CEs/moc_cfactuals_xgb.rda")
