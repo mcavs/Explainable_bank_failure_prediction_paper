@@ -35,7 +35,10 @@ for (i in 1:nrow(smote_filtered_dt)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
   
-  smote_moc_ce_dt[[i]] <- moc_cfactuals$evaluate()
+  smote_moc_ce_dt[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
   moc_cfactuals$predict()
   
 }
@@ -77,11 +80,15 @@ for (i in 1:nrow(smote_filtered_ext)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  smote_moc_ce_ext[[i]] <- moc_cfactuals$evaluate()
+  smote_moc_ce_ext[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
   print(moc_cfactuals$predict())
 }
 
-smote_moc_cfactuals_ext <- do.call(rbind, smote_moc_ce_ext)
+#smote_moc_cfactuals_ext <- do.call(rbind, smote_moc_ce_ext)
+smote_moc_cfactuals_ext  <- rbindlist(smote_moc_ce_ext, fill = TRUE)
 save(smote_moc_cfactuals_ext, file = "counterfactuals_for_all_models/smote/CEs/smote_moc_cfactuals_ext.rda")
 
 
@@ -119,9 +126,61 @@ for (i in 1:nrow(smote_filtered_rf)) {
   
   moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  smote_moc_ce_rf[[i]] <- moc_cfactuals$evaluate()
+  smote_moc_ce_rf[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
   print(moc_cfactuals$predict())
 }
 
-smote_moc_cfactuals_rf <- do.call(rbind, smote_moc_ce_rf)
+#smote_moc_cfactuals_rf <- do.call(rbind, smote_moc_ce_rf)
+smote_moc_cfactuals_rf  <- rbindlist(smote_moc_ce_rf, fill = TRUE)
 save(smote_moc_cfactuals_rf, file = "counterfactuals_for_all_models/smote/CEs/smote_moc_cfactuals_rf.rda")
+
+
+## XGBoost ###
+
+# Creating a 'predictor' object, which serves as a wrapper for different model types.
+smote_predictor_rf <- Predictor$new(model_smote2_xgb)
+smote_filtered_xgb <- smote_filtered_xgb %>% filter(NIMY >= -0.794654)
+smote_moc_ce_xgb <- list()
+
+for (i in 1:nrow(smote_filtered_xgb)) {
+  x_interest <- smote_filtered_xgb[i,]
+  print(smote_predictor_rf$predict(x_interest))
+  moc_classif <- MOCClassif$new(
+    smote_predictor_rf,
+    epsilon = NULL,
+    fixed_features = NULL,
+    max_changed = NULL,
+    mu = 20L,
+    termination_crit = "gens",
+    n_generations = 10L,
+    p_rec = 0.71,
+    p_rec_gen = 0.62,
+    p_mut = 0.73,
+    p_mut_gen = 0.5,
+    p_mut_use_orig = 0.4,
+    k = 1L,
+    weights = NULL,
+    lower = NULL,
+    upper = NULL,
+    init_strategy = "icecurve",
+    use_conditional_mutator = FALSE,
+    quiet = FALSE,
+    distance_function = "gower"
+  )
+  
+  moc_cfactuals <- moc_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  smote_moc_ce_xgb[[i]] <- cbind(
+    moc_cfactuals$evaluate(),
+    moc_cfactuals$evaluate_set()
+  )
+  moc_cfactuals$predict()
+  
+}
+
+smote_moc_cfactuals_xgb <- do.call(rbind, smote_moc_ce_xgb)
+save(smote_moc_cfactuals_xgb, file = "counterfactuals_for_all_models/smote/CEs/smote_moc_cfactuals_xgb.rda")
+
+
