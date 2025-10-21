@@ -3,12 +3,15 @@
 load("counterfactuals_for_all_models/undersampling/CEs/under_moc_cfactuals_ext.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_moc_cfactuals_rf.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_moc_cfactuals_dt.rda")
+load("counterfactuals_for_all_models/undersampling/CEs/under_moc_cfactuals_xgb.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_nice_cfactuals_rf.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_nice_cfactuals_ext.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_nice_cfactuals_dt.rda")
+load("counterfactuals_for_all_models/undersampling/CEs/under_nice_cfactuals_xgb.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_all_cfactuals_rf.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_all_cfactuals_ext.rda")
 load("counterfactuals_for_all_models/undersampling/CEs/under_all_cfactuals_dt.rda")
+load("counterfactuals_for_all_models/undersampling/CEs/under_all_cfactuals_xgb.rda")
 
 # What-if Results #
 under_all_cfactuals_ext$CE_Method <- rep("WhatIf", nrow(under_all_cfactuals_ext))
@@ -20,7 +23,10 @@ under_all_cfactuals_dt$Used_Model <- rep("Decision tree", nrow(under_all_cfactua
 under_all_cfactuals_rf$CE_Method <- rep("WhatIf", nrow(under_all_cfactuals_rf))
 under_all_cfactuals_rf$Used_Model <- rep("Random forest", nrow(under_all_cfactuals_rf))
 
-undersamp_whatif_results <- rbind(under_all_cfactuals_ext, under_all_cfactuals_dt, under_all_cfactuals_rf, fill = TRUE)
+under_all_cfactuals_xgb$CE_Method <- rep("WhatIf", nrow(under_all_cfactuals_xgb))
+under_all_cfactuals_xgb$Used_Model <- rep("XGBoost", nrow(under_all_cfactuals_xgb))
+
+undersamp_whatif_results <- rbind(under_all_cfactuals_ext, under_all_cfactuals_dt, under_all_cfactuals_rf, under_all_cfactuals_xgb, fill = TRUE)
 # undersamp_whatif_results <- undersamp_whatif_results[,-13]
 save(undersamp_whatif_results, file = "counterfactuals_for_all_models/undersampling/undersamp_whatif_results.rda")
 
@@ -35,7 +41,10 @@ under_moc_cfactuals_dt$Used_Model <- rep("Decision tree", nrow(under_moc_cfactua
 under_moc_cfactuals_rf$CE_Method <- rep("MOC", nrow(under_moc_cfactuals_rf))
 under_moc_cfactuals_rf$Used_Model <- rep("Random forest", nrow(under_moc_cfactuals_rf))
 
-undersamp_moc_results <- rbind(under_moc_cfactuals_ext, under_moc_cfactuals_dt, under_moc_cfactuals_rf, fill = TRUE)
+under_moc_cfactuals_xgb$CE_Method <- rep("MOC", nrow(under_moc_cfactuals_xgb))
+under_moc_cfactuals_xgb$Used_Model <- rep("XGBoost", nrow(under_moc_cfactuals_xgb))
+
+undersamp_moc_results <- rbind(under_moc_cfactuals_ext, under_moc_cfactuals_dt, under_moc_cfactuals_rf, under_moc_cfactuals_xgb,fill = TRUE)
 save(undersamp_moc_results, file = "counterfactuals_for_all_models/undersampling/undersamp_moc_results.rda")
 
 
@@ -50,8 +59,9 @@ under_nice_cfactuals_dt$Used_Model <- rep("Decision tree", nrow(under_nice_cfact
 under_nice_cfactuals_rf$CE_Method <- rep("NICE", nrow(under_nice_cfactuals_rf))
 under_nice_cfactuals_rf$Used_Model <- rep("Random forest", nrow(under_nice_cfactuals_rf))
 
-undersamp_nice_results <- rbind(under_nice_cfactuals_ext, under_nice_cfactuals_dt, under_nice_cfactuals_rf, fill = TRUE)
+under_nice_cfactuals_xgb$CE_Method <- rep("NICE", nrow(under_nice_cfactuals_xgb))
+under_nice_cfactuals_xgb$Used_Model <- rep("XGBoost", nrow(under_nice_cfactuals_xgb))
+
+undersamp_nice_results <- rbind(under_nice_cfactuals_ext, under_nice_cfactuals_dt, under_nice_cfactuals_rf, under_nice_cfactuals_xgb,fill = TRUE)
 save(undersamp_nice_results, file = "counterfactuals_for_all_models/undersampling/undersamp_nice_results.rda")
-
-
 
