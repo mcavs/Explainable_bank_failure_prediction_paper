@@ -11,7 +11,10 @@ for (i in 1:nrow(over_filtered_dt)) {
   print(over_predictor_dt$predict(x_interest))
   wi_classif <- WhatIfClassif$new(over_predictor_dt, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
-  over_counterfactuals_dt[[i]] <- cfactuals$evaluate()
+  over_counterfactuals_dt[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   cfactuals$predict()
 }
 
@@ -31,7 +34,10 @@ for (i in 1:nrow(over_filtered_ext)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(over_predictor_ext, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  over_counterfactuals_ext[[i]] <- cfactuals$evaluate()
+  over_counterfactuals_ext[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
@@ -51,9 +57,34 @@ for (i in 1:nrow(over_filtered_rf)) {
   print(prediction)
   wi_classif <- WhatIfClassif$new(over_predictor_rf, n_counterfactuals = 10L)
   cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
-  over_counterfactuals_rf[[i]] <- cfactuals$evaluate()
+  over_counterfactuals_rf[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
   print(cfactuals$predict())
 }
 
 over_all_cfactuals_rf <- do.call(rbind, over_counterfactuals_rf)
 save(over_all_cfactuals_rf, file = "counterfactuals_for_all_models/oversampling/CEs/over_all_cfactuals_rf.rda")
+
+### XGBoost ###
+
+over_predictor_xgb <- Predictor$new(model_over2_xgb)
+
+over_counterfactuals_xgb <- list()
+
+for (i in 1:nrow(over_filtered_xgb)) {
+  x_interest <- over_filtered_xgb[i,]
+  prediction <- over_predictor_xgb$predict(x_interest)
+  print(prediction)
+  wi_classif <- WhatIfClassif$new(over_predictor_xgb, n_counterfactuals = 10L)
+  cfactuals <- wi_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  over_counterfactuals_xgb[[i]] <- cbind(
+    cfactuals$evaluate(),
+    cfactuals$evaluate_set()
+  )
+  print(cfactuals$predict())
+}
+
+over_all_cfactuals_xgb <- do.call(rbind, over_counterfactuals_xgb)
+save(over_all_cfactuals_xgb, file = "counterfactuals_for_all_models/oversampling/CEs/over_all_cfactuals_xgb.rda")

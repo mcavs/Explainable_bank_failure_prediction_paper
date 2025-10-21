@@ -14,12 +14,15 @@ for (i in 1:nrow(over_filtered_dt)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
   
-  over_nice_ce_dt[[i]] <- nice_cfactuals$evaluate()
+  over_nice_ce_dt[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -41,12 +44,15 @@ for (i in 1:nrow(over_filtered_ext)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  over_nice_ce_ext[[i]] <- nice_cfactuals$evaluate()
+  over_nice_ce_ext[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -68,12 +74,15 @@ for (i in 1:nrow(over_filtered_rf)) {
     optimization = "sparsity", # sparsity (default), proximity or plausibility.
     x_nn_correct = FALSE,
     return_multiple = TRUE,
-    finish_early = TRUE,
+    finish_early = FALSE,
     distance_function = "gower")
   
   nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "X0", desired_prob = c(0.5, 1))
   
-  over_nice_ce_rf[[i]] <- nice_cfactuals$evaluate()
+  over_nice_ce_rf[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
   print(nice_cfactuals$predict())
   
 }
@@ -82,3 +91,32 @@ over_nice_cfactuals_rf <- do.call(rbind, over_nice_ce_rf)
 save(over_nice_cfactuals_rf, file = "counterfactuals_for_all_models/oversampling/CEs/over_nice_cfactuals_rf.rda")
 
 
+### XGBoost ###
+
+over_predictor_xgb <- Predictor$new(model_over2_xgb)
+over_nice_ce_xgb <- list()
+
+for (i in 1:nrow(over_filtered_xgb)) {
+  x_interest <- over_filtered_xgb[i,]
+  print(over_predictor_xgb$predict(x_interest))
+  nice_classif <- NICEClassif$new(
+    over_predictor_xgb,
+    optimization = "sparsity", # sparsity (default), proximity or plausibility.
+    x_nn_correct = FALSE,
+    return_multiple = TRUE,
+    finish_early = FALSE,
+    distance_function = "gower")
+  
+  nice_cfactuals <- nice_classif$find_counterfactuals(x_interest, desired_class = "0", desired_prob = c(0.5, 1))
+  
+  over_nice_ce_xgb[[i]] <- cbind(
+    nice_cfactuals$evaluate(),
+    nice_cfactuals$evaluate_set()
+  )
+  print(nice_cfactuals$predict())
+  
+}
+
+#over_nice_cfactuals_xgb <- do.call(rbind, over_nice_ce_xgb)
+over_nice_cfactuals_xgb <- rbindlist(over_nice_ce_xgb, fill = TRUE)
+save(over_nice_cfactuals_xgb, file = "counterfactuals_for_all_models/oversampling/CEs/over_nice_cfactuals_xgb.rda")
